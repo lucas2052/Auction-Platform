@@ -13,7 +13,19 @@
             {% endif %}
 
             <h3>{{ listing.title }}</h3>
-            <p>Price:<strong>${{ listing.starting_bid }}</strong></p>
+            <h3> 
+                <a href="{% url 'listing_detail' listing.id %}" style="text-decoration: none; color: #007bff;">
+                    {{ listing.title }}
+                </a>
+            </h3>
+
+            <p>
+                {% if listing.bids.all %}
+                    Current Price: <strong>${{ listing.current_highest_bid }}</strong>
+                {% else %}
+                    Starting Price: <strong>${{ listing.starting_bid }}</strong>
+                {% endif %}
+            </p>
 
             {% if user.is_authenticated and listing.owner == user %}
                 <a href="{% url 'edit_listing' listing.id %}"

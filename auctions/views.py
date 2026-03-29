@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404, render
 from .models import AuctionListing, User, category
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 
 from .models import User
 
@@ -96,7 +97,6 @@ def my_listings(request):
     return render(request, "auctions/my_listings.html", {"listings": user_listings})
 
 
-@login_required
 def edit_listing(request, listing_id):
     listing = get_object_or_404(AuctionListing, id=listing_id)
 
@@ -113,7 +113,32 @@ def edit_listing(request, listing_id):
         listing.save()
         return HttpResponseRedirect(reverse("my_listings"))
     return render(request, "auctions/edit_listing.html", {"listing": listing})
+
+
+def listing_detail(request, listing_id):
+    listing = get_object_or_404(AuctionListing, id=listing_id)
+    is_watchlisted = False
+    if request.user.is_authenticated:
+        if listing in request.user.watchlist.all():
+            is_watchlisted = True
+
+    return render(request ,"auctions/listing.html", {
+        "listing": listing,
+        "is_watchlisted": is_watchlisted
+        })
+            
+
     
 
+def toggle_watchlist(request, listing_id):
+    listing = get_object_or_404(AuctionListing, pk=listing_id)
+    
+    if listing in request.user.watchlist.all():
+        request.user.watchlist.remove(listing)
+        messages.success(request, f"{listing.title} has been removed from your watchlist.")
+    else:
+        request.user.watchlist.add(listing)
+        messages.success(request, f"{listing.title} has been added to your watchlist.")
 
+    return HttpResponseRedirect(reverse("listing_detail", args=[listing_id]))
 

@@ -1,0 +1,36 @@
+{% extends "auctions/layout.html" %}
+
+{% block body %}
+    <div class="container">
+        <h2>Listing: {{ listing.title }}</h2>
+
+        {% if user.is_authenticated %}
+            <form action="{% url 'toggle_watchlist' listing.id %}" method="post">
+                {% csrf_token %}
+                {% if is_watchlisted %}
+                    <button type="submit" class="btn btn-secondary">Remove from Watchlist</button>
+                {% else %}
+                    <button type="submit" class="btn btn-primary">Add to Watchlist</button>
+                {% endif %}
+            </form>
+        {% endif %}
+
+        <hr>
+
+        <div class="row">
+            <div class="col-md-6">
+                {% if listing.image_url %}
+                    <img src="{{ listing.image_url }}" alt="{{ listing.title }}" style="max-width: 100%;">
+                {% else %}
+                    <img src="https://via.placeholder.com/300" alt="No image">
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <p><strong>Description:</strong> {{ listing.description }}</p>
+                <h3>Current Price: ${{ listing.starting_bid }}</h3>
+                <p>Category: {{ listing.category }}</p>
+                <p>Created by: {{ listing.owner.username }}</p>
+            </div>
+        </div>
+    </div>
+{% endblock %}

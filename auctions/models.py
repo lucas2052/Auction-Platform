@@ -3,7 +3,8 @@ from django.db import models
 
 
 class User(AbstractUser):
-    pass
+    watchlist = models.ManyToManyField('AuctionListing', blank=True, related_name='users_watchlist')
+
 
 #定义模型
 class category(models.Model):
@@ -21,11 +22,18 @@ class AuctionListing(models.Model):
     category = models.ForeignKey(category, on_delete=models.SET_NULL,blank=True,null=True,related_name="listings")
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listings")
     is_active = models.BooleanField(default=True)
-    watchlist = models.ManyToManyField(User, blank=True, related_name="watchlist")
     winner = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="won_listings")
 
     def __str__(self):
         return self.title
+    
+@property
+def current_highest_bid(self):
+    highest_bid = self.listing_bids.order_by('-amount').first()
+    if highest_bid:
+        return highest_bid.amount
+    return self.starting_bid
+
 
 class Bid(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
