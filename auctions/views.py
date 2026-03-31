@@ -150,5 +150,37 @@ def watchlist(request):
     items = request.user.watchlist.all()
     return render(request, "auctions/watchlist.html", {"listings": items})
 
+def place_bid(request, listing_id):
+    listing = get_object_or_404(AuctionListing, pk=listing_id)
+    new_bid_amount = float(request.POST["bid_amount"])
+
+    current_price = listing.current_highest_bid if listing.current_highest_bid else listing.starting_bid
+
+    if new_bid_amount > current_price:
+        listing.current_highest_bid = new_bid_amount
+        listing.save()
+        messages.success(request, "Your bid has been placed successfully.")
+    else:
+        messages.error(request, "Your bid must be higher than the current price.")
+
+    return HttpResponseRedirect(reverse("listing_detail", args=[listing_id]))
+
+def close_auction(request, listing_id):
+    listing = get_object_or_404(AuctionListing, pk=listing_id)
+
+    if request.user == listing.owner:
+        listing.is_active = False
+        highest_bid = listing.listing_bids.order_by('-amount').first()
+        if highest_bid:
+            listing.winner = highest_bid.user
+        listing.save()
+        messages.success(request, "The auction has been closed.")
+
+    return HttpResponseRedirect(reverse("listing_detail", args=[listing_id]))
+
+
+
+
+
 
 

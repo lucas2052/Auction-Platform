@@ -23,6 +23,7 @@ class AuctionListing(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listings")
     is_active = models.BooleanField(default=True)
     winner = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="won_listings")
+    current_highest_bid = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return self.title

@@ -25,11 +25,48 @@
                     <img src="https://via.placeholder.com/300" alt="No image">
                 {% endif %}
             </div>
+        
             <div class="col-md-6">
                 <p><strong>Description:</strong> {{ listing.description }}</p>
-                <h3>Current Price: ${{ listing.starting_bid }}</h3>
+                <h3>Current Price: ${{ listing.current_highest_bid|default:listing.starting_bid }}</h3>
                 <p>Category: {{ listing.category }}</p>
                 <p>Created by: {{ listing.owner.username }}</p>
+
+            <hr>
+
+            {% if listing.is_active %}
+               {% if user.is_authenticated %}
+                  {% if user == listing.owner %}
+                     <div class="alert alert-info">You are the owner of the listing.</div>
+                     <form action="{% url 'close_auction' listing.id %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger">Close Auction</button>
+                     </form>
+                     {% else %}
+                        <form action="{% url 'place_bid' listing.id %}" method="post">
+                           {% csrf_token %}
+                            <div class="form-group">
+                                <input type="number" name="bid_amount" class="form-control" step="0.01"
+                                     placeholder="Enter your bid (must be > ${{ listing.current_highest_bid|default:listing.starting_bid }})"required>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-block">Place Bid</button>
+                        </form>
+                        {% endif %}
+                    {% else %}
+                        <p><a href="{% url 'login' %}">Log in</a> to place a bid.</p>
+                    {% endif %}
+                 {% else %}
+                    <div class="alert alert-dark">
+                        <h4>Auction Closed</h4>
+                        {% if user == listing.winner %}
+                            <div class="alert alert-success"><strong>Congratulations! You won this auction!</strong></div>
+                        {% elif listing.winner %}
+                            <p>Winner: <strong>{{ listing.winner.username }}</strong></p>
+                        {% else %}
+                            <p>No bids were placed.</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -1,7 +1,6 @@
 {% extends "auctions/layout.html" %}  
+{% block body %}
     <h2>Active Listings</h2>
-    
-    {% block body %}
     <div style="display: flex; flex-wrap: wrap; gap: 15px;">
         {% for listing in listings %}
             <div style="border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; width: 300px;">
@@ -18,7 +17,7 @@
                 </h3>
 
                 <p>
-                    {% if listing.bids.all %}
+                    {% if listing.current_highest_bid %}
                         Current Price: <strong>${{ listing.current_highest_bid }}</strong>
                     {% else %}
                         Starting Price: <strong>${{ listing.starting_bid }}</strong>
