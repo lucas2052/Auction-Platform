@@ -33,6 +33,18 @@
                 <p>Created by: {{ listing.owner.username }}</p>
 
             <hr>
+            <h4>Bids History</h4>
+            <url class="list-group mb-3">
+                {% for bid in bids %}
+                    <li class="list-group-item d-flex justify-content-between align-content-center">
+                        <span><strong>${{ bid.amount }} </strong> by {{ bid.user.username }}</span>
+                        <small class="text-muted">{{ bid.timestamp|date:"M d, Y" }}</small>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">No bids yet.</li>
+                {% endfor %}
+            </url>
+            <hr>
 
             {% if listing.is_active %}
                {% if user.is_authenticated %}

@@ -2,12 +2,14 @@ from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
-from .models import AuctionListing, User, category
+from .models import AuctionListing, Bid, User, category
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db import transaction
+from .models import AuctionListing, Bid, category, User
+from decimal import Decimal
 
-from .models import User
 
 
 def index(request):
@@ -88,7 +90,7 @@ def creating_listing(request):
             title=title,
             description=description,
             starting_bid=starting_bid,
-            current_price=starting_bid,
+            current_highest_bid=starting_bid,
             image_url=image_url,
             category=category_obj,
             owner=request.user,
@@ -130,6 +132,7 @@ def listing_detail(request, listing_id):
 
     return render(request ,"auctions/listing.html", {
         "listing": listing,
+        "bids": listing.listing_bids.order_by('-amount'),
         "is_watchlisted": is_watchlisted
         })
             
@@ -151,19 +154,28 @@ def watchlist(request):
     return render(request, "auctions/watchlist.html", {"listings": items})
 
 def place_bid(request, listing_id):
-    listing = get_object_or_404(AuctionListing, pk=listing_id)
-    new_bid_amount = float(request.POST["bid_amount"])
+    if request.method == "POST":
+        try:
+            with transaction.atomic():
+                listing = AuctionListing.objects.select_for_update().get(pk=listing_id)
+                bid_amount = Decimal(request.POST["bid_amount"])
+                threshold = listing.current_highest_bid if listing.current_highest_bid else Decimal(listing.starting_bid)
 
-    current_price = listing.current_highest_bid if listing.current_highest_bid else listing.starting_bid
-
-    if new_bid_amount > current_price:
-        listing.current_highest_bid = new_bid_amount
-        listing.save()
-        messages.success(request, "Your bid has been placed successfully.")
-    else:
-        messages.error(request, "Your bid must be higher than the current price.")
-
+                if bid_amount > threshold:
+                    listing.current_highest_bid = bid_amount
+                    listing.save()
+                    Bid.objects.create(amount=bid_amount, user=request.user, listing=listing)
+                    messages.success(request, "Bid placed successfully.")
+                else:
+                    messages.error(request, "Bid must be higher than current price.")
+        except ValueError:
+            messages.error(request, "Invalid bid amount.")
+        except AuctionListing.DoesNotExist:
+            messages.error(request, "Listing not found.")
+    
     return HttpResponseRedirect(reverse("listing_detail", args=[listing_id]))
+                
+     
 
 def close_auction(request, listing_id):
     listing = get_object_or_404(AuctionListing, pk=listing_id)
@@ -177,6 +189,17 @@ def close_auction(request, listing_id):
         messages.success(request, "The auction has been closed.")
 
     return HttpResponseRedirect(reverse("listing_detail", args=[listing_id]))
+
+def category_list(request):
+    categories = category.objects.all()
+    return render(request, "auctions/categories.html", {"categories": categories})
+
+def category_detail(request, category_name):
+    listings = AuctionListing.objects.filter(category__name=category_name, is_active=True)
+    return render(request, "auctions/index.html", {"listings": listings, "title": f"Category: {category_name}"})
+
+                  
+
 
 
 

@@ -16,14 +16,13 @@ class category(models.Model):
 class AuctionListing(models.Model):
     title = models.CharField(max_length=64)
     description = models.TextField()
-    starting_bid = models.DecimalField(max_digits=10, decimal_places=2)
-    current_price = models.DecimalField(max_digits=10, decimal_places=2)
+    starting_bid = models.DecimalField(max_digits=14, decimal_places=2)
     image_url = models.URLField()
     category = models.ForeignKey(category, on_delete=models.SET_NULL,blank=True,null=True,related_name="listings")
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="listings")
     is_active = models.BooleanField(default=True)
     winner = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name="won_listings")
-    current_highest_bid = models.FloatField(null=True, blank=True)
+    current_highest_bid = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
         return self.title
@@ -40,6 +39,7 @@ class Bid(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="users_bids")
     listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="listing_bids")
+    timestamp = models.DateTimeField(auto_now_add=True)
     
 class Comment(models.Model):
     content = models.TextField()
