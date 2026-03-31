@@ -1,37 +1,37 @@
-{% extends "auctions/layout.html" %}
-
-{% block body %}
+{% extends "auctions/layout.html" %}  
     <h2>Active Listings</h2>
-
-   <div style = "display: flex; flex-wrap: wrap;">
-    {% for listing in listings %}
-         <div style = "border: 1px solid #dee2e6; border-radius: 5px; padding: 10px;width: 300px;">
-           {% if listing.image_url %}
-                <img src="{{ listing.image_url }}" alt="{{ listing.title }}" style="width: 100%; height: 200px; object-fit: cover; margin-bottom: 10px;">
-            {% else %}
-                <div style="width: 100%; height : 200px;background-color: #eee; text-align:center; line-height: 200px; color:#999;"> No Image</div>
-            {% endif %}
-
-            <h3>{{ listing.title }}</h3>
-            <h3> 
-                <a href="{% url 'listing_detail' listing.id %}" style="text-decoration: none; color: #007bff;">
-                    {{ listing.title }}
-                </a>
-            </h3>
-
-            <p>
-                {% if listing.bids.all %}
-                    Current Price: <strong>${{ listing.current_highest_bid }}</strong>
+    
+    {% block body %}
+    <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+        {% for listing in listings %}
+            <div style="border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; width: 300px;">
+                {% if listing.image_url %}
+                    <img src="{{ listing.image_url }}" alt="{{ listing.title }}" style="width: 100%; height: 200px; object-fit: cover; margin-bottom: 10px;">
                 {% else %}
-                    Starting Price: <strong>${{ listing.starting_bid }}</strong>
+                    <div style="width: 100%; height: 200px; background-color: #eee; text-align:center; line-height: 200px; color:#999;">No Image</div>
                 {% endif %}
-            </p>
 
-            {% if user.is_authenticated and listing.owner == user %}
-                <a href="{% url 'edit_listing' listing.id %}"
-                    style = "display: inline-block; background-color: #6c757d; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px; margin-top: 10px;">Edit Listing</a>
+                <h3> 
+                    <a href="{% url 'listing_detail' listing.id %}" style="text-decoration: none; color: #007bff;">
+                        {{ listing.title }}
+                    </a>
+                </h3>
+
+                <p>
+                    {% if listing.bids.all %}
+                        Current Price: <strong>${{ listing.current_highest_bid }}</strong>
+                    {% else %}
+                        Starting Price: <strong>${{ listing.starting_bid }}</strong>
                     {% endif %}
-        </div> {% empty %}
-        <p>No listings found.</p>
-    {% endfor %}
-   </div>{% endblock %}
+                </p>
+
+                {% if user.is_authenticated and listing.owner == user %}
+                    <a href="{% url 'edit_listing' listing.id %}"
+                       style="display: inline-block; background-color: #6c757d; color: white; padding: 5px 10px; text-decoration: none; border-radius: 3px; margin-top: 10px;">Edit Listing</a>
+                {% endif %}
+            </div> 
+        {% empty %}
+            <p>No listings found.</p>
+        {% endfor %}
+    </div>
+{% endblock %}

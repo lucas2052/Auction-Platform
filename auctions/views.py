@@ -13,7 +13,13 @@ from .models import User
 def index(request):
     active_listings = AuctionListing.objects.all()
 
-    return render(request, "auctions/index.html" , {"listings": active_listings})
+    user_watchlist = []
+    if request.user.is_authenticated:
+        user_watchlist = request.user.watchlist.all()
+
+    return render(request, "auctions/index.html" , {
+        "listings": active_listings,
+        "watchlist": user_watchlist})
 
 
 def login_view(request):
@@ -128,8 +134,6 @@ def listing_detail(request, listing_id):
         })
             
 
-    
-
 def toggle_watchlist(request, listing_id):
     listing = get_object_or_404(AuctionListing, pk=listing_id)
     
@@ -141,4 +145,10 @@ def toggle_watchlist(request, listing_id):
         messages.success(request, f"{listing.title} has been added to your watchlist.")
 
     return HttpResponseRedirect(reverse("listing_detail", args=[listing_id]))
+
+def watchlist(request):
+    items = request.user.watchlist.all()
+    return render(request, "auctions/watchlist.html", {"listings": items})
+
+
 
