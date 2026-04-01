@@ -36,7 +36,7 @@ def current_highest_bid(self):
 
 
 class Bid(models.Model):
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=14, decimal_places=2)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="users_bids")
     listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="listing_bids")
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -44,8 +44,13 @@ class Bid(models.Model):
 class Comment(models.Model):
     content = models.TextField()
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="users_comments")
-    listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="listing_comments")
+    listing = models.ForeignKey(AuctionListing, on_delete=models.CASCADE, related_name="comments")
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} on {self.listing.title}: {self.content[20]}"
+
+
 
     
 

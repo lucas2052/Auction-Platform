@@ -9,6 +9,7 @@ from django.contrib import messages
 from django.db import transaction
 from .models import AuctionListing, Bid, category, User
 from decimal import Decimal
+from .forms import CommentForm
 
 
 
@@ -113,7 +114,7 @@ def edit_listing(request, listing_id):
     if request.method =="POST":
         listing.title = request.POST["title"]
         listing.description = request.POST["description"]
-        listing.starting_bid = float(request.POST["starting_bid"])
+        listing.starting_bid = Decimal(request.POST["starting_bid"])
         listing.image_url = request.POST["image_url"]
         category_name = request.POST.get("category","")
         category_obj, _ = category.objects.get_or_create(name=category_name)if category_name else(None,False) 
@@ -133,7 +134,9 @@ def listing_detail(request, listing_id):
     return render(request ,"auctions/listing.html", {
         "listing": listing,
         "bids": listing.listing_bids.order_by('-amount'),
-        "is_watchlisted": is_watchlisted
+        "is_watchlisted": is_watchlisted,
+        "comments": listing.comments.all(),
+        "commentForm": CommentForm()
         })
             
 
@@ -197,6 +200,24 @@ def category_list(request):
 def category_detail(request, category_name):
     listings = AuctionListing.objects.filter(category__name=category_name, is_active=True)
     return render(request, "auctions/index.html", {"listings": listings, "title": f"Category: {category_name}"})
+
+def add_comment(request, listing_id):
+    listing = get_object_or_404(AuctionListing, pk=listing_id)
+
+    if request.method == "POST":
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.user = request.user
+            comment.listing = listing
+            comment.save()
+            messages.success(request, "Comment added successfully.")
+        else:
+            messages.error(request,"Invalid comment. please try again.")
+            return HttpResponseRedirect(reverse("listing_detail", args=[listing_id]))
+        return HttpResponseRedirect(reverse("listing_detail", args=[listing_id]))
+    
+
 
                   
 
